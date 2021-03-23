@@ -5,7 +5,7 @@ use pluggable_interrupt_os::vga_buffer::{BUFFER_WIDTH, BUFFER_HEIGHT, plot, Colo
 use pc_keyboard::{DecodedKey, KeyCode};
 use num::traits::SaturatingAdd;
 
-const GAME_HEIGHT: usize = 35;
+const GAME_HEIGHT: usize = 23;
 const HEADER_SPACE: usize = 2;
 
 const Start: &'static str =
