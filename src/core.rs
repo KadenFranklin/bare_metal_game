@@ -95,20 +95,20 @@ impl Position {
 
 #[derive(Copy,Debug,Clone,Eq,PartialEq)]
 pub struct Character {
-    col: ModNumC<usize, BUFFER_WIDTH>,
-    row: ModNumC<usize, BUFFER_HEIGHT>,
-    dx: ModNumC<usize, BUFFER_WIDTH>,
-    dy: ModNumC<usize, BUFFER_HEIGHT>,
+    col: usize,
+    row: usize,
+    dx: usize,
+    dy: usize,
     active: bool
 }
 
 impl Character {
     pub fn new() -> Self {
         LetterMover {
-            col: ModNumC::new(BUFFER_WIDTH / 2),
-            row: ModNumC::new(22),
-            dx: ModNumC::new(BUFFER_WIDTH / 2),
-            dy: ModNumC::new(22),
+            col: (BUFFER_WIDTH / 2),
+            row: 22,
+            dx: (BUFFER_WIDTH / 2),
+            dy: 22,
             active: true
         }
     }
@@ -121,16 +121,16 @@ impl Character {
 
     fn shot(&mut self) { self.active = false; }
 
-    fn clear_current(&self) { plot( ' ', self.col.a(), self.row.a(), ColorCode::new(Color::Black, Color::Black)); }
+    fn clear_current(&self) { plot( ' ', self.col, self.row, ColorCode::new(Color::Black, Color::Black)); }
 
     fn update_location(&mut self) {
-        if self.dx <  ModNumC::new(2) {
-            self.col = ModNumC::new(2);
-            self.dx = ModNumC::new(2);
+        if self.dx <  2 {
+            self.col = 2;
+            self.dx = 2;
         }
-        if self.dx > ModNumC::new(78) {
-            self.col = ModNumC::new(78);
-            self.dx = ModNumC::new(78);
+        if self.dx > 78 {
+            self.col = 78;
+            self.dx = 78;
         }
         else {
             self.col = self.dx;
@@ -138,7 +138,7 @@ impl Character {
         }
     }
 
-    fn draw_current(&self) { plot( 'A', self.col.a(), self.row.a(), ColorCode::new(Color::Cyan, Color::Black)); }
+    fn draw_current(&self) { plot( 'A', self.col, self.row, ColorCode::new(Color::Cyan, Color::Black)); }
 
     pub fn key(&mut self, key: DecodedKey) {
         match key {
@@ -163,7 +163,7 @@ impl Character {
         if is_drawable(key) {
             match key {
                 ' ' => {
-                    //shoot or something
+
                 }
                 _ => {}
             }
@@ -171,7 +171,6 @@ impl Character {
     }
 }
 
-//on tick self.Laser.movee
 #[derive(Debug,Copy,Clone,Eq,PartialEq)]
 pub struct Laser {
     char: char,
@@ -193,7 +192,6 @@ impl Laser {
     fn done(&mut self) {self.active = false;}
 }
 
-//on tick self.
 #[derive(Debug,Copy,Clone,Eq,PartialEq)]
 pub struct SpaceInvaders {
     array: [[Invaders; 17]; 7],
@@ -202,7 +200,7 @@ pub struct SpaceInvaders {
 impl SpaceInvaders {
     fn new() -> Self {
         SpaceInvaders{
-            array: [[Invaders::new() ]]
+         array: [[Invaders::new() ]]
         }
     }
 }
@@ -259,7 +257,5 @@ impl SpaceInvadersGame {
             status: Status::Running
         }
     }
-    pub fn update() {
 
-    }
 }
