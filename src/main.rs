@@ -32,21 +32,3 @@ fn key(key: DecodedKey) {
     let mut game = GAME.lock();
     game.key(key);
 }
-
-// need to think about how i am going to structure the invaders
-// if an entire column gets destroyed, need to update it so that
-// bounce off of the boundary from that - DATA STRUCTURE ???
-
-// need to think about the cover aswell, needs to be
-// destroyable by both char and invader lasers
-
-// on tick- move space invaders,
-// move char following keypress,
-// launch laser following keypress,
-// move laser,
-// update score,
-// if hit by laser game over
-
-// keypress interupts - move left & right, rockets
-
-// need interrupts for moving left and right, rockets, rocket collision
