@@ -1,9 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 
-use bare_metal_modulo::{ModNumC, MNum, ModNumIterator};
 use pluggable_interrupt_os::vga_buffer::{BUFFER_WIDTH, BUFFER_HEIGHT, plot, ColorCode, Color, is_drawable};
 use pc_keyboard::{DecodedKey, KeyCode};
-use num::traits::SaturatingAdd;
 
 const HEIGHT: usize = 25;
 const WIDTH: usize = 80;
@@ -48,24 +46,6 @@ impl Dir {
             Dir::S => Dir::N,
             Dir::E => Dir::W,
             Dir::W => Dir::E
-        }
-    }
-
-    fn left(&self) -> Dir {
-        match self {
-            Dir::N => Dir::W,
-            Dir::S => Dir::E,
-            Dir::E => Dir::N,
-            Dir::W => Dir::S
-        }
-    }
-
-    fn right(&self) -> Dir {
-        match self {
-            Dir::N => Dir::E,
-            Dir::S => Dir::W,
-            Dir::E => Dir::S,
-            Dir::W => Dir::N
         }
     }
 }
@@ -123,9 +103,9 @@ impl Invaders {
         }
 
     fn check_bounds(&mut self) -> usize {
-        if self.pos.col <= 2 { return self.pos.col as usize }
-        if self.pos.col >= 78 { return self.pos.col as usize }
-        else{ return self.pos.col as usize }
+        if self.pos.col <= 2 { self.pos.col as usize }
+        if self.pos.col >= 78 { self.pos.col as usize }
+        else{ self.pos.col as usize }
     }
 
     fn increment_invader(&mut self) {
@@ -220,29 +200,29 @@ impl Character {
 }
 
 const START: &'static str =
-    "###############################################################################\n
-    #                                                                            #\n
-    #      M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M     #\n
-    #      M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M     #\n
-    #      M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M     #\n
-    #      M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M     #\n
-    #      M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M     #\n
-    #      M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M     #\n
-    #      M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M   M     #\n
-    #                                                                            #\n
-    #                                                                            #\n
-    #                                                                            #\n
-    #                                                                            #\n
-    #                                                                            #\n
-    #                                                                            #\n
-    #      ******              ******             ******              ******     #\n
-    #    **********          **********         **********          **********   #\n
-    #    **********          **********         **********          **********   #\n
-    #    **********          **********         **********          **********   #\n
-    #                                                                            #\n
-    #                                      A                                     #\n
-    #                                                                            #\n
-    ###############################################################################";
+    "################################################################################\n
+    #                                                                              #\n
+    #     M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M      #\n
+    #                                                                              #\n
+    #     M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M      #\n
+    #                                                                              #\n
+    #     M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M      #\n
+    #                                                                              #\n
+    #     M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M  M      #\n
+    #                                                                              #\n
+    #                                                                              #\n
+    #                                                                              #\n
+    #                                                                              #\n
+    #                                                                              #\n
+    #                                                                              #\n
+    #      ******              ******              ******              ******      #\n
+    #    **********          **********          **********          **********    #\n
+    #    **********          **********          **********          **********    #\n
+    #    **********          **********          **********          **********    #\n
+    #                                                                              #\n
+    #                                      A                                       #\n
+    #                                                                              #\n
+    ################################################################################";
 
 impl SpaceInvadersGame {
     pub fn new() -> Self {
@@ -268,7 +248,7 @@ impl SpaceInvadersGame {
         }
         self.status = Status::Running;
         self.laser_count = 0;
-        self.invaderCount = 0;
+        self.invader_count = 0;
         self.score = 0;
     }
 
@@ -276,12 +256,11 @@ impl SpaceInvadersGame {
         match icon {
             '#' => self.cells[rowe][column] = Cell::Wall,
             '*' => self.cells[rowe][column] = Cell::Barricade,
-            ' ' => self.cells[rowe][column] = Cell::Empty,
             'A' => self.character = Character::new(),
             'M' => {
-                if self.invaderCount < 119 {
-                    self.invaderCount += 1;
-                    self.spaceInvaders[self.invaderCount] = Invaders::new( Position{col: column as i16 ,row: rowe as i16 } );
+                if self.invader_count < 93 {
+                    self.invader_count += 1;
+                    self.space_invaders[self.invader_count] = Invaders::new( Position{col: column as i16 ,row: rowe as i16 } );
                 }
             }
             _ =>  panic!("Unrecognized character: '{}'", icon)
@@ -337,14 +316,14 @@ impl SpaceInvadersGame {
     }
 
     fn increment_invaders(&mut self) {
-        for invader in self.spaceInvaders.iter_mut() {
+        for invader in self.space_invaders.iter_mut() {
             invader.update_invader();
         }
     }
 
     fn check_collision(&mut self) {
         for laser in self.lasers.iter_mut() {
-            for invader in self.spaceInvaders.iter_mut(){
+            for invader in self.space_invaders.iter_mut(){
                 if (laser.pos.row == invader.pos.row && laser.pos.col == invader.pos.col) && (laser.active && invader.active) {
                     laser.active = false;
                     invader.active = false;
