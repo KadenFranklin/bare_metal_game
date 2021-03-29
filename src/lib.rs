@@ -2,7 +2,6 @@
 
 use pluggable_interrupt_os::vga_buffer::{BUFFER_WIDTH, BUFFER_HEIGHT, plot, ColorCode, Color, is_drawable};
 use pc_keyboard::{DecodedKey, KeyCode};
-use pluggable_interrupt_os::vga_buffer::Color::{Cyan, Black, Blue};
 
 const HEIGHT: usize = 25;
 const WIDTH: usize = 80;
@@ -104,9 +103,9 @@ impl Invaders {
         }
 
     fn check_bounds(&mut self) -> usize {
-        if self.pos.col <= 2 { self.pos.col as usize }
-        if self.pos.col >= 78 { self.pos.col as usize }
-        else{ self.pos.col as usize }
+        if self.pos.col <= 2 {return self.pos.col as usize }
+        if self.pos.col >= 78 {return self.pos.col as usize }
+        else{return self.pos.col as usize }
     }
 
     fn increment_invader(&mut self) {
@@ -274,6 +273,7 @@ impl SpaceInvadersGame {
         self.increment_laser();
         self.increment_invaders();
         self.check_collision();
+        //also need to update the score and header
     }
 
     pub fn key(&mut self, key: DecodedKey) {
