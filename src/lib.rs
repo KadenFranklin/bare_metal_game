@@ -2,6 +2,7 @@
 
 use pluggable_interrupt_os::vga_buffer::{BUFFER_WIDTH, BUFFER_HEIGHT, plot, ColorCode, Color, is_drawable, plot_num};
 use pc_keyboard::{DecodedKey, KeyCode};
+use num::Integer;
 
 const HEIGHT: usize = 25;
 const WIDTH: usize = 80;
