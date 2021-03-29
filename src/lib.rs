@@ -2,6 +2,7 @@
 
 use pluggable_interrupt_os::vga_buffer::{BUFFER_WIDTH, BUFFER_HEIGHT, plot, ColorCode, Color, is_drawable};
 use pc_keyboard::{DecodedKey, KeyCode};
+use pluggable_interrupt_os::vga_buffer::Color::{Cyan, Black, Blue};
 
 const HEIGHT: usize = 25;
 const WIDTH: usize = 80;
@@ -99,7 +100,7 @@ impl Invaders {
     }
 
     fn draw_invader(&self) {
-        if self.active { plot('M', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Cyan, Color::Black)); }
+        if self.active { plot('M', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Green, Color::Black)); }
         }
 
     fn check_bounds(&mut self) -> usize {
@@ -151,7 +152,7 @@ impl Laser {
         if self.active { plot(' ', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Black, Color::Black)); } }
 
     fn draw_laser(&self) {
-        if self.active { plot('|', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Cyan, Color::Black)); } }
+        if self.active { plot('|', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Red, Color::Black)); } }
 
     fn increment_laser(&mut self) {
         if self.pos.row > 1 {
@@ -243,7 +244,8 @@ impl SpaceInvadersGame {
     fn reset(&mut self) {
         for (row, row_chars) in START.split('\n').enumerate() {
             for (col, icon) in row_chars.chars().enumerate() {
-                self.translate_icon(row, col, icon)
+                self.translate_icon(row, col, icon);
+                plot(icon, col, row, ColorCode::new(Color::Blue, Color::Black))
             }
         }
         self.status = Status::Running;
@@ -294,8 +296,9 @@ impl SpaceInvadersGame {
     }
 
     fn handle_unicode(&mut self, key: char) {
-        if key == ' ' {
-            self.shoot()
+        match self.status {
+            Status::Over => { if key == ' ' { self.reset() } },
+            _ => { if key == ' ' { self.shoot() } }
         }
     }
 
