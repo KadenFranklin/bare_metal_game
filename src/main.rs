@@ -7,8 +7,6 @@ use pc_keyboard::{DecodedKey, KeyCode};
 use pluggable_interrupt_os::HandlerTable;
 use pluggable_interrupt_os::vga_buffer::clear_screen;
 use bare_metal_game::SpaceInvadersGame;
-use crossbeam::atomic::AtomicCell;
-use pluggable_interrupt_os::println;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
