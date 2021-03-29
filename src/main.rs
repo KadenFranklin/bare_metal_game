@@ -6,7 +6,7 @@ use spin::Mutex;
 use pc_keyboard::{DecodedKey, KeyCode};
 use pluggable_interrupt_os::HandlerTable;
 use pluggable_interrupt_os::vga_buffer::clear_screen;
-use bare_metal_game::LetterMover;
+use bare_metal_game::SpaceInvadersGame;
 use crossbeam::atomic::AtomicCell;
 use pluggable_interrupt_os::println;
 
@@ -20,7 +20,7 @@ pub extern "C" fn _start() -> ! {
 }
 
 lazy_static! {
-    static ref GAME: Mutex<SpaceInvadersGame> = Mutex::new(LetterMover::new());
+    static ref GAME: Mutex<SpaceInvadersGame> = Mutex::new(SpaceInvadersGame::new());
 }
 
 fn tick() {
@@ -31,4 +31,8 @@ fn tick() {
 fn key(key: DecodedKey) {
     let mut game = GAME.lock();
     game.key(key);
+}
+
+fn startup() {
+    clear_screen();
 }
