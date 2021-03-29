@@ -243,8 +243,11 @@ impl SpaceInvadersGame {
     fn reset(&mut self) {
         for (row, row_chars) in START.split('\n').enumerate() {
             for (col, icon) in row_chars.chars().enumerate() {
-                self.translate_icon(row, col, icon);
-                plot(icon, col, row, ColorCode::new(Color::Blue, Color::Black))
+                if icon == ' ' { plot(icon, col, row, ColorCode::new(Color::Black, Color::Black)) }
+                else {
+                    self.translate_icon(row, col, icon);
+                    plot(icon, col, row, ColorCode::new(Color::Blue, Color::Black))
+                }
             }
         }
         self.status = Status::Running;
@@ -257,6 +260,7 @@ impl SpaceInvadersGame {
         match icon {
             '#' => self.cells[rowe][column] = Cell::Wall,
             '*' => self.cells[rowe][column] = Cell::Barricade,
+            ' ' => self.cells[rowe][column] = Cell::Empty,
             'A' => self.character = Character::new(),
             'M' => {
                 if self.invader_count < 93 {
