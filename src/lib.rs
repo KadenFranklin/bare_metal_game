@@ -278,7 +278,6 @@ impl SpaceInvadersGame {
         for invader in self.space_invaders.iter_mut() {
             if invader.pos.row > 19 {
                 self.status = Status::Over;
-                self.counter += 1;
             }
         }
         if self.invader_count == 0 + self.counter  {
