@@ -1,6 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 
-use pluggable_interrupt_os::vga_buffer::{BUFFER_WIDTH, BUFFER_HEIGHT, plot, ColorCode, Color, is_drawable, plot_num};
+use pluggable_interrupt_os::vga_buffer::{BUFFER_WIDTH, BUFFER_HEIGHT, plot, ColorCode, Color, plot_num, plot_str};
 use pc_keyboard::{DecodedKey, KeyCode};
 use num::Integer;
 
@@ -10,12 +10,13 @@ const WIDTH: usize = 80;
 pub struct SpaceInvadersGame {
     character: Character,
     cells: [[Cell; WIDTH]; HEIGHT],
-    lasers: [Laser; 5],
+    lasers: [Laser; 1000],
     laser_count: usize,
     space_invaders: [Invaders; 70],
     invader_count: usize,
     status: Status,
-    score: usize
+    score: usize,
+    counter: usize
 }
 
 #[derive(Copy,Clone,Eq,PartialEq,Debug)]
@@ -38,17 +39,6 @@ pub enum Dir {
     N, S, E, W
 }
 
-impl Dir {
-    fn reverse(&self) -> Dir {
-        match self {
-            Dir::N => Dir::S,
-            Dir::S => Dir::N,
-            Dir::E => Dir::W,
-            Dir::W => Dir::E
-        }
-    }
-}
-
 #[derive(Debug,Copy,Clone,Eq,PartialEq)]
 pub struct Position { col: i16, row: i16 }
 
@@ -69,6 +59,7 @@ impl Position {
             Dir::W => Position {row: self.row,     col: self.col - 1}
         }
     }
+
 }
 
 #[derive(Copy,Debug,Clone,Eq,PartialEq)]
@@ -126,18 +117,18 @@ impl Laser {
         self.draw_laser();
     }
 
-    fn clear_laser(&self) {
-        if self.active { plot(' ', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Black, Color::Black)); } }
+    fn clear_laser(&self) { if self.active { plot(' ', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Black, Color::Black)); } }
 
-    fn draw_laser(&self) {
-        if self.active { plot('|', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Red, Color::Black)); } }
+    fn draw_laser(&self) { if self.active { plot('|', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Red, Color::Black)); } }
 
     fn increment_laser(&mut self) {
-        if self.pos.row > 1 {
-            self.pos.row -= 1;
-        }
-        else{
-            self.active = false;
+        if self.active {
+            if self.pos.row >= 4 {
+                self.pos.row -= 1;
+            }
+            else{
+                self.active = false;
+            }
         }
     }
 }
@@ -145,7 +136,6 @@ impl Laser {
 #[derive(Debug,Copy,Clone,Eq,PartialEq)]
 pub struct Invaders {
     pos: Position,
-    dir: Dir,
     active: bool
 }
 
@@ -153,7 +143,6 @@ impl Invaders {
     fn new(pos: Position) -> Self {
         Invaders{
             pos,
-            dir: Dir::E,
             active: true
         }
     }
@@ -164,29 +153,29 @@ impl Invaders {
         self.draw_invader();
     }
 
-    fn clear_invader(&self) {
-        if self.active { plot(' ', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Black, Color::Black)); }
-    }
+    fn clear_invader(&self) { if self.active { plot(' ', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Black, Color::Black)); } }
 
-    fn draw_invader(&self) {
-        if self.active { plot('M', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Green, Color::Black)); }
-        }
+    fn draw_invader(&self) { if self.active { plot('M', self.pos.col as usize, self.pos.row as usize, ColorCode::new(Color::Green, Color::Black)); } }
 
     fn increment_invader(&mut self) {
-        if self.pos.col <= 2 {
-            self.pos.row += 1;
-            self.dir = self.dir.reverse();
-        }
-        if self.pos.col >= 78 {
-            self.pos.row += 1;
-            self.dir = self.dir.reverse();
-        }
-        else {
-            if self.pos.row.is_even(){
-                self.pos.col += 1;
+        if self.active {
+            if self.pos.col <= 2 {
+                self.pos.col = 3;
+                self.pos.row += 1;
+            } else if self.pos.col >= 78 {
+                self.pos.col = 77;
+                self.pos.row += 1;
+            } else {
+                if self.pos.row.is_even(){
+                    self.pos.col += 1;
+                }
+                if self.pos.row.is_odd() {
+                    self.pos.col -= 1;
+                }
             }
-            if self.pos.row.is_odd() {
-                self.pos.col -= 1;
+
+            if self.pos.row > 20 {
+                self.pos.row -= 1;
             }
         }
     }
@@ -225,12 +214,13 @@ impl SpaceInvadersGame {
         let mut game = SpaceInvadersGame {
             character: Character::new(),
             cells: [[Cell::Empty; WIDTH]; HEIGHT],
-            lasers: [Laser::new(Position{col: 0, row: 0}); 5],
+            lasers: [Laser::new(Position{col: 0, row: 0}); 1000],
             laser_count: 0,
-            space_invaders: [Invaders::new(Position{col: 0, row: 0}); 70],
+            space_invaders: [Invaders::new(Position{col: 6, row: 4}); 70],
             invader_count: 0,
             status: Status::Running,
-            score: 0
+            score: 0,
+            counter: 0
         };
         game.reset();
         game
@@ -238,6 +228,11 @@ impl SpaceInvadersGame {
 
     fn reset(&mut self) {
         self.put_header();
+        self.space_invaders[69] = Invaders::new( Position{col: 6 ,row: 4 });
+        self.laser_count = 0;
+        self.invader_count = 1;
+        self.score = 0;
+        self.status = Status::Running;
         for (row, row_chars) in START.split('\n').enumerate() {
             for (col, icon) in row_chars.chars().enumerate() {
                 if icon == ' ' { plot(icon, col, row + 2, ColorCode::new(Color::Black, Color::Black)) }
@@ -247,22 +242,18 @@ impl SpaceInvadersGame {
                 }
             }
         }
-        self.status = Status::Running;
-        self.laser_count = 0;
-        self.invader_count = 0;
-        self.score = 0;
     }
 
-    fn translate_icon(&mut self, row: usize, col: usize, icon: char) {
+    fn translate_icon(&mut self, mut row: usize, col: usize, icon: char) {
         match icon {
             '#' => self.cells[row][col] = Cell::Wall,
             '*' => self.cells[row][col] = Cell::Barricade,
             ' ' => self.cells[row][col] = Cell::Empty,
             'A' => self.character = Character::new(),
             'M' => {
-                    self.invader_count += 1;
-                    self.space_invaders[self.invader_count] = Invaders::new( Position{col: col as i16 ,row: row as i16 } );
-            }
+                row = row + 2;
+                self.space_invaders[self.invader_count] = Invaders::new( Position{col: col as i16 ,row: row as i16 } );
+                self.invader_count += 1; },
             _ =>  panic!("Unrecognized character: '{}'", icon)
         }
     }
@@ -276,17 +267,35 @@ impl SpaceInvadersGame {
     }
 
     fn update_score(&mut self) {
-        self.score += 10;
+        self.score += 1;
         plot_num(self.score as isize, 8, 1, ColorCode::new(Color::White, Color::Black));
     }
 
+    fn check_end(&mut self) {
+        for invader in self.space_invaders.iter_mut() {
+            if invader.pos.row > 19 {
+                self.status = Status::Over;
+                self.counter += 1;
+            }
+        }
+        if self.invader_count == 0 + self.counter  {
+            self.status = Status::Over;
+            self.counter += 1;
+        }
+    }
+
     pub fn tick(&mut self) {
-        self.character.update_character();
-        self.increment_laser();
-        //rn doesnt work with increment_invaders()
-        //self.increment_invaders();
-        self.check_collision();
-        self.update_score();
+        match self.status {
+            Status::Running => {
+                self.character.update_character();
+                self.increment_laser();
+                self.check_collision();
+                self.increment_invaders();
+                self.update_score();
+                self.check_end();
+            }
+            Status::Over => { plot_str("GAME OVER - Press S to restart.", 10 , HEIGHT / 2, ColorCode::new(Color::White, Color::Black)); }
+        }
     }
 
     pub fn key(&mut self, key: DecodedKey) {
@@ -310,7 +319,7 @@ impl SpaceInvadersGame {
 
     fn handle_unicode(&mut self, key: char) {
         match self.status {
-            Status::Over => { if key == ' ' { self.reset()} },
+            Status::Over => { if key == 's' { self.reset()} },
             _ => { if key == ' ' { self.shoot() } }
         }
     }
@@ -325,28 +334,32 @@ impl SpaceInvadersGame {
     fn increment_laser(&mut self) {
         for laser in self.lasers.iter_mut() {
             laser.update_lasers();
-            if laser.active == false && self.laser_count > 1 {
-                self.laser_count -= 1;
-            }
         }
     }
 
     fn increment_invaders(&mut self) {
-        for invader in self.space_invaders.iter_mut() {
-            invader.update_invader();
+        if self.score % 4 == 0 {
+            for invader in self.space_invaders.iter_mut() {
+                invader.update_invader();
+            }
         }
     }
 
     fn check_collision(&mut self) {
         for laser in self.lasers.iter_mut() {
-            //check for collision with barricades or walls
-
+            if self.cells[laser.pos.row as usize][laser.pos.col as usize] == Cell::Barricade {
+                plot(' ', laser.pos.col as usize, laser.pos.row as usize, ColorCode::new(Color::Black, Color::Black));
+                laser.active = false;
+                self.cells[laser.pos.row as usize][laser.pos.col as usize] = Cell::Empty;
+            }
             for invader in self.space_invaders.iter_mut(){
-                if (laser.pos.row == invader.pos.row && laser.pos.col == invader.pos.col) && (laser.active && invader.active) {
+                if ((laser.pos == invader.pos) && (laser.active && invader.active)) && (self.invader_count >= 1 && self.laser_count >= 1) {
                     plot(' ', laser.pos.col as usize, laser.pos.row as usize, ColorCode::new(Color::Black, Color::Black));
-                    laser.active = false;
                     invader.active = false;
-                    self.score += 100;
+                    laser.active = false;
+                    self.invader_count -= 1;
+                    self.laser_count -= 1;
+                    self.score += 10;
                 }
             }
         }
