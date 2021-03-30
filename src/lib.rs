@@ -16,7 +16,8 @@ pub struct SpaceInvadersGame {
     invader_count: usize,
     status: Status,
     score: usize,
-    counter: usize
+    counter: usize,
+    last_shot: usize
 }
 
 #[derive(Copy,Clone,Eq,PartialEq,Debug)]
@@ -220,7 +221,8 @@ impl SpaceInvadersGame {
             invader_count: 0,
             status: Status::Running,
             score: 0,
-            counter: 0
+            counter: 0,
+            last_shot: 0
         };
         game.reset();
         game
@@ -232,6 +234,7 @@ impl SpaceInvadersGame {
         self.laser_count = 0;
         self.invader_count = 1;
         self.score = 0;
+        self.last_shot = 0;
         self.status = Status::Running;
         for (row, row_chars) in START.split('\n').enumerate() {
             for (col, icon) in row_chars.chars().enumerate() {
@@ -325,9 +328,10 @@ impl SpaceInvadersGame {
     }
 
     fn shoot(&mut self) {
-        if self.laser_count < self.lasers.len() {
+        if self.laser_count < self.lasers.len() && self.score > self.last_shot + 10 {
             self.lasers[self.laser_count] = Laser::new(Position{col: self.character.col as i16, row: self.character.row as i16 - 1});
             self.laser_count += 1;
+            self.last_shot = self.score;
         }
     }
 
